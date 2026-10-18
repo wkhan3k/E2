@@ -32,7 +32,6 @@ let direction = 0;
 // B3: Pending commands
 const commandQueue: Command[] = [];
 
-// B3: Queue-related HTML elements
 const pendingList = document.querySelector<HTMLOListElement>(
   "#rover-pending",
 )!;
@@ -49,7 +48,7 @@ const clearButton = document.querySelector<HTMLButtonElement>(
   "#rover-clear",
 )!;
 
-// Keep coordinates within the grid
+// Keep coordinates inside the grid
 function stayInBounds(value: number): number {
   return Math.max(0, Math.min(gridSize - 1, value));
 }
@@ -88,7 +87,7 @@ function drawRover() {
   }`;
 }
 
-// B1/B2: Execute a command using direction records
+// Execute a command using direction records
 function executeCommand(command: Command) {
   if (command === "Forward") {
     const currentDirection = directions[direction];
@@ -104,19 +103,16 @@ function executeCommand(command: Command) {
   drawRover();
 }
 
-// B3: Update the pending command display
+// Update the pending command display
 function updateQueueDisplay() {
-  // Remove old list items
   pendingList.replaceChildren();
 
-  // Create one list item for each queued command
   for (const command of commandQueue) {
     const listItem = document.createElement("li");
     listItem.textContent = command;
     pendingList.appendChild(listItem);
   }
 
-  // Enable buttons only when commands are pending
   const hasCommands = commandQueue.length > 0;
 
   runButton.disabled = !hasCommands;
@@ -124,16 +120,16 @@ function updateQueueDisplay() {
 
   queueStatus.textContent = hasCommands
     ? `${commandQueue.length} command(s) pending`
-    : "Empty · queue not implemented";
+    : "Empty · no pending commands";
 }
 
-// B3: Add a command without moving the rover
+// Add commands without moving the rover
 function enqueueCommand(command: Command) {
   commandQueue.push(command);
   updateQueueDisplay();
 }
 
-// B3: Run commands in FIFO order
+// Run commands in FIFO order
 function runCommands() {
   while (commandQueue.length > 0) {
     const command = commandQueue.shift()!;
@@ -143,33 +139,33 @@ function runCommands() {
   updateQueueDisplay();
 }
 
-// B3: Discard pending commands
+// Clear pending commands
 function clearCommands() {
   commandQueue.length = 0;
   updateQueueDisplay();
 }
 
-// Forward now adds to the queue
+// Forward button
 document.querySelector<HTMLButtonElement>("#rover-forward")!.onclick = () => {
   enqueueCommand("Forward");
 };
 
-// Right now adds to the queue
+// Right button
 document.querySelector<HTMLButtonElement>("#rover-right")!.onclick = () => {
   enqueueCommand("Right");
 };
 
-// Run executes queued commands
+// Run button
 runButton.onclick = () => {
   runCommands();
 };
 
-// Clear discards queued commands
+// Clear button
 clearButton.onclick = () => {
   clearCommands();
 };
 
-// Reset restores rover and clears pending commands
+// Reset button
 document.querySelector<HTMLButtonElement>("#rover-reset")!.onclick = () => {
   x = 2;
   y = 2;
