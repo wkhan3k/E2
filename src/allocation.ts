@@ -1,3 +1,4 @@
+
 export {};
 
 const canvas = document.querySelector<HTMLCanvasElement>(
@@ -11,7 +12,6 @@ const readout = document.querySelector<HTMLParagraphElement>(
 const totalCrew = 6;
 const suppliesPerProducer = 3;
 
-// A2: Explicit type for calculated shift results
 type ShiftResult = {
   assignedToSupplies: number;
   totalCrew: number;
@@ -20,9 +20,16 @@ type ShiftResult = {
   balance: number;
 };
 
+// A3: Typed record describing a report row
+type SupplyReportRow = {
+  label: string;
+  value: number;
+  color: string;
+};
+
 let assignedToSupplies = 2;
 
-// Calculate shift results independently of the canvas and HTML
+// A1/A2: Calculate supplies independently of rendering
 function calculateSupplies(assigned: number): ShiftResult {
   const production = assigned * suppliesPerProducer;
   const consumption = totalCrew;
@@ -37,24 +44,42 @@ function calculateSupplies(assigned: number): ShiftResult {
   };
 }
 
-// A2: Canvas consumes the calculated shift result
+// A3: Build ordered display records from A2 results
+function createSupplyReportRows(
+  result: ShiftResult,
+): SupplyReportRow[] {
+  return [
+    {
+      label: "Production",
+      value: result.production,
+      color: "#27766b",
+    },
+    {
+      label: "Consumption",
+      value: result.consumption,
+      color: "#a44d23",
+    },
+  ];
+}
+
+// Draw canvas using the calculated shift result
 function drawAllocationCanvas(result: ShiftResult) {
   const {
     assignedToSupplies,
     totalCrew,
-    production,
-    consumption,
   } = result;
 
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-  // Draw all six crew members
+  // Draw crew members
   for (let crewIndex = 0; crewIndex < totalCrew; crewIndex++) {
-    ctx.fillStyle = crewIndex < assignedToSupplies ? "#27766b" : "#c9d2c9";
+    ctx.fillStyle =
+      crewIndex < assignedToSupplies ? "#27766b" : "#c9d2c9";
 
     ctx.fillRect(18 + crewIndex * 45, 16, 36, 36);
 
-    ctx.fillStyle = crewIndex < assignedToSupplies ? "#ffffff" : "#233e43";
+    ctx.fillStyle =
+      crewIndex < assignedToSupplies ? "#ffffff" : "#233e43";
 
     ctx.font = "16px system-ui";
     ctx.fillText(
@@ -64,28 +89,32 @@ function drawAllocationCanvas(result: ShiftResult) {
     );
   }
 
-  // Draw assigned crew count
+  // Draw crew assignment label
   ctx.fillStyle = "#233e43";
   ctx.font = "14px system-ui";
+
   ctx.fillText(
     `Producers: ${assignedToSupplies} / ${totalCrew}`,
     18,
     76,
   );
 
-  // Draw production
-  ctx.fillText(`Production: ${production}`, 18, 102);
-  ctx.fillStyle = "#27766b";
-  ctx.fillRect(18, 110, production * 14, 20);
+  // A3: Render report rows using one loop
+  const rows = createSupplyReportRows(result);
 
-  // Draw consumption
-  ctx.fillStyle = "#233e43";
-  ctx.fillText(`Consumption: ${consumption}`, 18, 154);
-  ctx.fillStyle = "#a44d23";
-  ctx.fillRect(18, 162, consumption * 14, 20);
+  rows.forEach((row, index) => {
+    const labelY = 102 + index * 52;
+    const barY = 110 + index * 52;
+
+    ctx.fillStyle = "#233e43";
+    ctx.fillText(`${row.label}: ${row.value}`, 18, labelY);
+
+    ctx.fillStyle = row.color;
+    ctx.fillRect(18, barY, row.value * 14, 20);
+  });
 }
 
-// A2: HTML readout consumes the same shift result
+// A2: HTML uses the same calculated results
 function updateAllocationReadout(result: ShiftResult) {
   readout.textContent =
     `Assigned: ${result.assignedToSupplies}/${result.totalCrew} · ` +
@@ -94,7 +123,7 @@ function updateAllocationReadout(result: ShiftResult) {
     `Balance: ${result.balance > 0 ? "+" : ""}${result.balance}`;
 }
 
-// Calculate once and send the same result to both renderers
+// Update both displays using one calculation
 function updateAllocationDisplay() {
   const result = calculateSupplies(assignedToSupplies);
 
@@ -103,21 +132,23 @@ function updateAllocationDisplay() {
 }
 
 // Decrease assigned crew
-document.querySelector<HTMLButtonElement>("#allocation-less")!.onclick = () => {
-  assignedToSupplies = Math.max(0, assignedToSupplies - 1);
-  updateAllocationDisplay();
-};
+document.querySelector<HTMLButtonElement>("#allocation-less")!.onclick =
+  () => {
+    assignedToSupplies = Math.max(0, assignedToSupplies - 1);
+    updateAllocationDisplay();
+  };
 
 // Increase assigned crew
-document.querySelector<HTMLButtonElement>("#allocation-more")!.onclick = () => {
-  assignedToSupplies = Math.min(
-    totalCrew,
-    assignedToSupplies + 1,
-  );
-  updateAllocationDisplay();
-};
+document.querySelector<HTMLButtonElement>("#allocation-more")!.onclick =
+  () => {
+    assignedToSupplies = Math.min(
+      totalCrew,
+      assignedToSupplies + 1,
+    );
+    updateAllocationDisplay();
+  };
 
-// Reset crew allocation
+// Reset allocation
 document.querySelector<HTMLButtonElement>("#allocation-reset")!.onclick =
   () => {
     assignedToSupplies = 2;
