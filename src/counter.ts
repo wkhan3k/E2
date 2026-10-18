@@ -23,6 +23,10 @@ let count = 0;
 let panel: HTMLParagraphElement | null = null;
 let panelUpdates = 0;
 
+// C2: EventTarget announces shield changes
+const shieldEvents = new EventTarget();
+const shieldChangedEvent = "shield-changed";
+
 // C1: Calculate shield data without accessing the DOM or canvas
 function getShieldSnapshot(): ShieldSnapshot {
   return {
@@ -32,7 +36,7 @@ function getShieldSnapshot(): ShieldSnapshot {
   };
 }
 
-// C1: Draw the HUD using a ShieldSnapshot
+// Draw the HUD using a ShieldSnapshot
 function drawMeter(snapshot: ShieldSnapshot) {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -53,7 +57,7 @@ function drawMeter(snapshot: ShieldSnapshot) {
     `Shield charge: ${snapshot.charge} / ${snapshot.capacity}`;
 }
 
-// Update inspector delivery count
+// Inspector delivery counter
 function updateStats() {
   panelUpdates++;
 
@@ -62,7 +66,7 @@ function updateStats() {
   renderStats(getShieldSnapshot());
 }
 
-// C1: Inspector also uses the shared snapshot
+// Inspector renderer
 function renderStats(snapshot: ShieldSnapshot) {
   if (!panel) return;
 
@@ -70,7 +74,7 @@ function renderStats(snapshot: ShieldSnapshot) {
     `Missing charge: ${snapshot.missingCharge}`;
 }
 
-// Update shield charge
+// C2: Change state and announce actual changes
 function setCount(next: number) {
   const bounded = Math.max(0, Math.min(shieldCapacity, next));
 
@@ -78,15 +82,19 @@ function setCount(next: number) {
 
   count = bounded;
 
-  // Both displays use the same calculated snapshot
-  const snapshot = getShieldSnapshot();
+  // HUD updates through an event, not a direct drawMeter call
+  shieldEvents.dispatchEvent(new Event(shieldChangedEvent));
 
-  drawMeter(snapshot);
-
+  // C2: Inspector still updates directly
   if (panel) {
     updateStats();
   }
 }
+
+// C2: Permanent HUD event listener
+shieldEvents.addEventListener(shieldChangedEvent, () => {
+  drawMeter(getShieldSnapshot());
+});
 
 // Shield takes damage
 document.querySelector<HTMLButtonElement>("#counter-less")!.onclick = () => {
@@ -110,7 +118,6 @@ document.querySelector<HTMLButtonElement>("#counter-open")!.onclick = () => {
   panel = document.createElement("p");
   host.append(panel);
 
-  // Opening does not count as a delivery
   renderStats(getShieldSnapshot());
 };
 
