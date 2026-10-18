@@ -6,22 +6,41 @@ const readout = document.querySelector<HTMLParagraphElement>(
   "#rover-readout",
 )!;
 
-const headings = ["North", "East", "South", "West"];
+// B1: Explicit command type
+type Command = "Forward" | "Right";
+
+// B2: Typed direction records
+type DirectionRecord = {
+  name: string;
+  dx: number;
+  dy: number;
+};
+
+const directions: DirectionRecord[] = [
+  { name: "North", dx: 0, dy: -1 },
+  { name: "East", dx: 1, dy: 0 },
+  { name: "South", dx: 0, dy: 1 },
+  { name: "West", dx: -1, dy: 0 },
+];
+
+const gridSize = 5;
 
 let x = 2;
 let y = 2;
 let direction = 0;
 
-// B1: Explicit command type
-type Command = "Forward" | "Right";
+// B2: Keep movement inside the grid
+function stayInBounds(value: number): number {
+  return Math.max(0, Math.min(gridSize - 1, value));
+}
 
 // Draw the rover and grid
 function drawRover() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   ctx.strokeStyle = "#718881";
 
-  for (let row = 0; row < 5; row++) {
-    for (let column = 0; column < 5; column++) {
+  for (let row = 0; row < gridSize; row++) {
+    for (let column = 0; column < gridSize; column++) {
       ctx.strokeRect(
         10 + column * 56,
         10 + row * 56,
@@ -45,37 +64,37 @@ function drawRover() {
   ctx.restore();
 
   readout.textContent = `Position: (${x}, ${y}) · Facing: ${
-    headings[direction]
+    directions[direction].name
   }`;
 }
 
-// B1: Handle commands in one function
+// B1/B2: Execute commands using direction records
 function executeCommand(command: Command) {
   if (command === "Forward") {
-    if (direction === 0) y = Math.max(0, y - 1);
-    if (direction === 1) x = Math.min(4, x + 1);
-    if (direction === 2) y = Math.min(4, y + 1);
-    if (direction === 3) x = Math.max(0, x - 1);
+    const currentDirection = directions[direction];
+
+    x = stayInBounds(x + currentDirection.dx);
+    y = stayInBounds(y + currentDirection.dy);
   }
 
   if (command === "Right") {
-    direction = (direction + 1) % 4;
+    direction = (direction + 1) % directions.length;
   }
 
   drawRover();
 }
 
-// Forward button dispatches a command immediately
+// Forward button
 document.querySelector<HTMLButtonElement>("#rover-forward")!.onclick = () => {
   executeCommand("Forward");
 };
 
-// Right button dispatches a command immediately
+// Right button
 document.querySelector<HTMLButtonElement>("#rover-right")!.onclick = () => {
   executeCommand("Right");
 };
 
-// Reset the rover
+// Reset button
 document.querySelector<HTMLButtonElement>("#rover-reset")!.onclick = () => {
   x = 2;
   y = 2;
