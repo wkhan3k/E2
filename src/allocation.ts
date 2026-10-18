@@ -1,4 +1,3 @@
-
 export {};
 
 const canvas = document.querySelector<HTMLCanvasElement>(
@@ -73,13 +72,11 @@ function drawAllocationCanvas(result: ShiftResult) {
 
   // Draw crew members
   for (let crewIndex = 0; crewIndex < totalCrew; crewIndex++) {
-    ctx.fillStyle =
-      crewIndex < assignedToSupplies ? "#27766b" : "#c9d2c9";
+    ctx.fillStyle = crewIndex < assignedToSupplies ? "#27766b" : "#c9d2c9";
 
     ctx.fillRect(18 + crewIndex * 45, 16, 36, 36);
 
-    ctx.fillStyle =
-      crewIndex < assignedToSupplies ? "#ffffff" : "#233e43";
+    ctx.fillStyle = crewIndex < assignedToSupplies ? "#ffffff" : "#233e43";
 
     ctx.font = "16px system-ui";
     ctx.fillText(
@@ -132,21 +129,19 @@ function updateAllocationDisplay() {
 }
 
 // Decrease assigned crew
-document.querySelector<HTMLButtonElement>("#allocation-less")!.onclick =
-  () => {
-    assignedToSupplies = Math.max(0, assignedToSupplies - 1);
-    updateAllocationDisplay();
-  };
+document.querySelector<HTMLButtonElement>("#allocation-less")!.onclick = () => {
+  assignedToSupplies = Math.max(0, assignedToSupplies - 1);
+  updateAllocationDisplay();
+};
 
 // Increase assigned crew
-document.querySelector<HTMLButtonElement>("#allocation-more")!.onclick =
-  () => {
-    assignedToSupplies = Math.min(
-      totalCrew,
-      assignedToSupplies + 1,
-    );
-    updateAllocationDisplay();
-  };
+document.querySelector<HTMLButtonElement>("#allocation-more")!.onclick = () => {
+  assignedToSupplies = Math.min(
+    totalCrew,
+    assignedToSupplies + 1,
+  );
+  updateAllocationDisplay();
+};
 
 // Reset allocation
 document.querySelector<HTMLButtonElement>("#allocation-reset")!.onclick =

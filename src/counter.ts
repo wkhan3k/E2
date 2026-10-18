@@ -1,4 +1,3 @@
-
 export {};
 
 const canvas = document.querySelector<HTMLCanvasElement>("#counter-canvas")!;
@@ -69,8 +68,7 @@ function updateStats(snapshot: ShieldSnapshot) {
 function renderStats(snapshot: ShieldSnapshot) {
   if (!panel) return;
 
-  panel.textContent =
-    `Shield charge: ${snapshot.charge} · ` +
+  panel.textContent = `Shield charge: ${snapshot.charge} · ` +
     `Missing charge: ${snapshot.missingCharge}`;
 }
 
@@ -98,43 +96,38 @@ shieldEvents.addEventListener(shieldChangedEvent, () => {
 });
 
 // Shield takes damage
-document.querySelector<HTMLButtonElement>("#counter-less")!.onclick =
-  () => {
-    setCount(count - 1);
-  };
+document.querySelector<HTMLButtonElement>("#counter-less")!.onclick = () => {
+  setCount(count - 1);
+};
 
 // Shield recharges
-document.querySelector<HTMLButtonElement>("#counter-more")!.onclick =
-  () => {
-    setCount(count + 1);
-  };
+document.querySelector<HTMLButtonElement>("#counter-more")!.onclick = () => {
+  setCount(count + 1);
+};
 
 // Reset shield
-document.querySelector<HTMLButtonElement>("#counter-reset")!.onclick =
-  () => {
-    setCount(0);
-  };
+document.querySelector<HTMLButtonElement>("#counter-reset")!.onclick = () => {
+  setCount(0);
+};
 
 // Open inspector
-document.querySelector<HTMLButtonElement>("#counter-open")!.onclick =
-  () => {
-    if (panel) return;
+document.querySelector<HTMLButtonElement>("#counter-open")!.onclick = () => {
+  if (panel) return;
 
-    panel = document.createElement("p");
-    host.append(panel);
+  panel = document.createElement("p");
+  host.append(panel);
 
-    // Initial rendering is not a delivery
-    renderStats(getShieldSnapshot());
-  };
+  // Initial rendering is not a delivery
+  renderStats(getShieldSnapshot());
+};
 
 // Close inspector
-document.querySelector<HTMLButtonElement>("#counter-close")!.onclick =
-  () => {
-    if (!panel) return;
+document.querySelector<HTMLButtonElement>("#counter-close")!.onclick = () => {
+  if (!panel) return;
 
-    panel.remove();
-    panel = null;
-  };
+  panel.remove();
+  panel = null;
+};
 
 // Initial HUD rendering
 drawMeter(getShieldSnapshot());

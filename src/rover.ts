@@ -1,4 +1,3 @@
-
 export {};
 
 const canvas = document.querySelector<HTMLCanvasElement>("#rover-canvas")!;
@@ -84,8 +83,9 @@ function drawRover() {
   ctx.fill();
   ctx.restore();
 
-  readout.textContent =
-    `Position: (${x}, ${y}) · Facing: ${directions[direction].name}`;
+  readout.textContent = `Position: (${x}, ${y}) · Facing: ${
+    directions[direction].name
+  }`;
 }
 
 // B1/B2: Execute a command using direction records
@@ -150,16 +150,14 @@ function clearCommands() {
 }
 
 // Forward now adds to the queue
-document.querySelector<HTMLButtonElement>("#rover-forward")!.onclick =
-  () => {
-    enqueueCommand("Forward");
-  };
+document.querySelector<HTMLButtonElement>("#rover-forward")!.onclick = () => {
+  enqueueCommand("Forward");
+};
 
 // Right now adds to the queue
-document.querySelector<HTMLButtonElement>("#rover-right")!.onclick =
-  () => {
-    enqueueCommand("Right");
-  };
+document.querySelector<HTMLButtonElement>("#rover-right")!.onclick = () => {
+  enqueueCommand("Right");
+};
 
 // Run executes queued commands
 runButton.onclick = () => {
@@ -172,15 +170,14 @@ clearButton.onclick = () => {
 };
 
 // Reset restores rover and clears pending commands
-document.querySelector<HTMLButtonElement>("#rover-reset")!.onclick =
-  () => {
-    x = 2;
-    y = 2;
-    direction = 0;
+document.querySelector<HTMLButtonElement>("#rover-reset")!.onclick = () => {
+  x = 2;
+  y = 2;
+  direction = 0;
 
-    clearCommands();
-    drawRover();
-  };
+  clearCommands();
+  drawRover();
+};
 
 // Initial display
 drawRover();
