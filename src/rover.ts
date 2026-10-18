@@ -29,7 +29,26 @@ let x = 2;
 let y = 2;
 let direction = 0;
 
-// B2: Keep movement inside the grid
+// B3: Pending commands
+const commandQueue: Command[] = [];
+
+const pendingList = document.querySelector<HTMLOListElement>(
+  "#rover-pending",
+)!;
+
+const queueStatus = document.querySelector<HTMLParagraphElement>(
+  "#rover-queue-status",
+)!;
+
+const runButton = document.querySelector<HTMLButtonElement>(
+  "#rover-run",
+)!;
+
+const clearButton = document.querySelector<HTMLButtonElement>(
+  "#rover-clear",
+)!;
+
+// Keep movement inside the grid
 function stayInBounds(value: number): number {
   return Math.max(0, Math.min(gridSize - 1, value));
 }
@@ -68,7 +87,7 @@ function drawRover() {
   }`;
 }
 
-// B1/B2: Execute commands using direction records
+// Execute one command
 function executeCommand(command: Command) {
   if (command === "Forward") {
     const currentDirection = directions[direction];
@@ -84,14 +103,66 @@ function executeCommand(command: Command) {
   drawRover();
 }
 
+// B3: Update pending command display
+function updateQueueDisplay() {
+  pendingList.replaceChildren();
+
+  for (const command of commandQueue) {
+    const listItem = document.createElement("li");
+    listItem.textContent = command;
+    pendingList.appendChild(listItem);
+  }
+
+  const hasCommands = commandQueue.length > 0;
+
+  runButton.disabled = !hasCommands;
+  clearButton.disabled = !hasCommands;
+
+  queueStatus.textContent = hasCommands
+    ? `${commandQueue.length} command(s) pending`
+    : "Empty · no pending commands";
+}
+
+// B3: Add commands without moving
+function enqueueCommand(command: Command) {
+  commandQueue.push(command);
+  updateQueueDisplay();
+}
+
+// B3: Run commands in FIFO order
+function runCommands() {
+  while (commandQueue.length > 0) {
+    const command = commandQueue.shift()!;
+    executeCommand(command);
+  }
+
+  updateQueueDisplay();
+}
+
+// B3: Clear the queue
+function clearCommands() {
+  commandQueue.length = 0;
+  updateQueueDisplay();
+}
+
 // Forward button
 document.querySelector<HTMLButtonElement>("#rover-forward")!.onclick = () => {
-  executeCommand("Forward");
+  enqueueCommand("Forward");
 };
 
 // Right button
 document.querySelector<HTMLButtonElement>("#rover-right")!.onclick = () => {
-  executeCommand("Right");
+  enqueueCommand("Right");
+};
+
+// Run button
+runButton.onclick = () => {
+  runCommands();
+};
+
+// Clear button
+clearButton.onclick = () => {
+  clearCommands();
 };
 
 // Reset button
@@ -99,8 +170,11 @@ document.querySelector<HTMLButtonElement>("#rover-reset")!.onclick = () => {
   x = 2;
   y = 2;
   direction = 0;
+
+  clearCommands();
   drawRover();
 };
 
 // Initial display
 drawRover();
+updateQueueDisplay();
