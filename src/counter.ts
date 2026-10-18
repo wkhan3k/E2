@@ -27,7 +27,7 @@ let panelUpdates = 0;
 const shieldEvents = new EventTarget();
 const shieldChangedEvent = "shield-changed";
 
-// C1: Create a snapshot without DOM or canvas access
+// C1: Prepare shield data without DOM or canvas access
 function getShieldSnapshot(): ShieldSnapshot {
   return {
     charge: count,
@@ -57,13 +57,6 @@ function drawMeter(snapshot: ShieldSnapshot) {
     `Shield charge: ${snapshot.charge} / ${snapshot.capacity}`;
 }
 
-// Inspector diagnostic
-function updateStats(snapshot: ShieldSnapshot) {
-  panelUpdates++;
-  diagnostic.textContent = `Inspector deliveries: ${panelUpdates}`;
-  renderStats(snapshot);
-}
-
 // Inspector renderer
 function renderStats(snapshot: ShieldSnapshot) {
   if (!panel) return;
@@ -72,25 +65,58 @@ function renderStats(snapshot: ShieldSnapshot) {
     `Missing charge: ${snapshot.missingCharge}`;
 }
 
-// C2: Change model state and announce the change
+// C3: Inspector listener counts actual deliveries
+function handleInspectorChange() {
+  panelUpdates++;
+
+  diagnostic.textContent = `Inspector deliveries: ${panelUpdates}`;
+
+  renderStats(getShieldSnapshot());
+}
+
+// C3: Opening creates the panel and subscribes
+function openInspector() {
+  if (panel) return;
+
+  panel = document.createElement("p");
+  host.append(panel);
+
+  // Initial rendering does not count as a delivery
+  renderStats(getShieldSnapshot());
+
+  // Subscribe to future changes
+  shieldEvents.addEventListener(
+    shieldChangedEvent,
+    handleInspectorChange,
+  );
+}
+
+// C3: Closing removes the panel and subscription
+function closeInspector() {
+  if (!panel) return;
+
+  shieldEvents.removeEventListener(
+    shieldChangedEvent,
+    handleInspectorChange,
+  );
+
+  panel.remove();
+  panel = null;
+}
+
+// C2/C3: Only change model state and announce changes
 function setCount(next: number) {
   const bounded = Math.max(0, Math.min(shieldCapacity, next));
 
-  // Unchanged values must not announce an event
+  // Unchanged values do not dispatch events
   if (bounded === count) return;
 
   count = bounded;
 
-  // Notify listeners that shield state changed
   shieldEvents.dispatchEvent(new Event(shieldChangedEvent));
-
-  // C2: Inspector still uses its direct update path
-  if (panel) {
-    updateStats(getShieldSnapshot());
-  }
 }
 
-// C2: Permanent HUD listens for model changes
+// C2: Permanent HUD listener
 shieldEvents.addEventListener(shieldChangedEvent, () => {
   drawMeter(getShieldSnapshot());
 });
@@ -110,24 +136,12 @@ document.querySelector<HTMLButtonElement>("#counter-reset")!.onclick = () => {
   setCount(0);
 };
 
-// Open inspector
-document.querySelector<HTMLButtonElement>("#counter-open")!.onclick = () => {
-  if (panel) return;
+// Inspector controls
+document.querySelector<HTMLButtonElement>("#counter-open")!.onclick =
+  openInspector;
 
-  panel = document.createElement("p");
-  host.append(panel);
+document.querySelector<HTMLButtonElement>("#counter-close")!.onclick =
+  closeInspector;
 
-  // Initial rendering is not a delivery
-  renderStats(getShieldSnapshot());
-};
-
-// Close inspector
-document.querySelector<HTMLButtonElement>("#counter-close")!.onclick = () => {
-  if (!panel) return;
-
-  panel.remove();
-  panel = null;
-};
-
-// Initial HUD rendering
+// Initial rendering
 drawMeter(getShieldSnapshot());
