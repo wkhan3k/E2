@@ -10,7 +10,7 @@ const diagnostic = document.querySelector<HTMLParagraphElement>(
   "#counter-diagnostic",
 )!;
 
-// C1: Shared shield snapshot type
+// C1: Shared shield snapshot
 type ShieldSnapshot = {
   charge: number;
   capacity: number;
@@ -27,7 +27,7 @@ let panelUpdates = 0;
 const shieldEvents = new EventTarget();
 const shieldChangedEvent = "shield-changed";
 
-// C1: Calculate shield data without accessing the DOM or canvas
+// C1: Prepare shield data without DOM or canvas access
 function getShieldSnapshot(): ShieldSnapshot {
   return {
     charge: count,
@@ -36,7 +36,7 @@ function getShieldSnapshot(): ShieldSnapshot {
   };
 }
 
-// Draw the HUD using a ShieldSnapshot
+// Permanent HUD renderer
 function drawMeter(snapshot: ShieldSnapshot) {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -57,15 +57,6 @@ function drawMeter(snapshot: ShieldSnapshot) {
     `Shield charge: ${snapshot.charge} / ${snapshot.capacity}`;
 }
 
-// Inspector delivery counter
-function updateStats() {
-  panelUpdates++;
-
-  diagnostic.textContent = `Inspector deliveries: ${panelUpdates}`;
-
-  renderStats(getShieldSnapshot());
-}
-
 // Inspector renderer
 function renderStats(snapshot: ShieldSnapshot) {
   if (!panel) return;
@@ -74,7 +65,45 @@ function renderStats(snapshot: ShieldSnapshot) {
     `Missing charge: ${snapshot.missingCharge}`;
 }
 
-// C2: Change state and announce actual changes
+// C3: Count event deliveries received by the inspector
+function handleInspectorChange() {
+  panelUpdates++;
+
+  diagnostic.textContent = `Inspector deliveries: ${panelUpdates}`;
+
+  renderStats(getShieldSnapshot());
+}
+
+// C3: Opening creates the panel and subscribes
+function openInspector() {
+  if (panel) return;
+
+  panel = document.createElement("p");
+  host.append(panel);
+
+  // Initial rendering does not count as a delivery
+  renderStats(getShieldSnapshot());
+
+  shieldEvents.addEventListener(
+    shieldChangedEvent,
+    handleInspectorChange,
+  );
+}
+
+// C3: Closing removes the panel and subscription
+function closeInspector() {
+  if (!panel) return;
+
+  shieldEvents.removeEventListener(
+    shieldChangedEvent,
+    handleInspectorChange,
+  );
+
+  panel.remove();
+  panel = null;
+}
+
+// C2/C3: Change state and announce actual changes
 function setCount(next: number) {
   const bounded = Math.max(0, Math.min(shieldCapacity, next));
 
@@ -82,16 +111,10 @@ function setCount(next: number) {
 
   count = bounded;
 
-  // HUD updates through an event, not a direct drawMeter call
   shieldEvents.dispatchEvent(new Event(shieldChangedEvent));
-
-  // C2: Inspector still updates directly
-  if (panel) {
-    updateStats();
-  }
 }
 
-// C2: Permanent HUD event listener
+// C2: Permanent HUD listener
 shieldEvents.addEventListener(shieldChangedEvent, () => {
   drawMeter(getShieldSnapshot());
 });
@@ -111,23 +134,12 @@ document.querySelector<HTMLButtonElement>("#counter-reset")!.onclick = () => {
   setCount(0);
 };
 
-// Open inspector
-document.querySelector<HTMLButtonElement>("#counter-open")!.onclick = () => {
-  if (panel) return;
+// Inspector controls
+document.querySelector<HTMLButtonElement>("#counter-open")!.onclick =
+  openInspector;
 
-  panel = document.createElement("p");
-  host.append(panel);
+document.querySelector<HTMLButtonElement>("#counter-close")!.onclick =
+  closeInspector;
 
-  renderStats(getShieldSnapshot());
-};
-
-// Close inspector
-document.querySelector<HTMLButtonElement>("#counter-close")!.onclick = () => {
-  if (!panel) return;
-
-  panel.remove();
-  panel = null;
-};
-
-// Initial HUD rendering
+// Initial rendering
 drawMeter(getShieldSnapshot());
